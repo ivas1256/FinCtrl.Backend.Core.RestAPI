@@ -5,12 +5,13 @@ using System.Linq.Expressions;
 
 namespace FinCtrl.Backend.Core.RestAPI.DAL.Implementation
 {
-    public abstract class CRUDRepository<TEntity, TDBContext> : IRepository<TEntity>
-        where TEntity : class, IEntity
-        where TDBContext : DbContext
+    public abstract class CRUDRepository<TEntity, TDTO, TDbcontext> : IRepository<TEntity,TDTO>
+        where TEntity : class, IEntity        
+        where TDTO : class, IDTO
+        where TDbcontext : DbContext
     {
-        protected readonly TDBContext dbContext;
-        public CRUDRepository(TDBContext dbContext)
+        public readonly TDbcontext dbContext;
+        public CRUDRepository(TDbcontext dbContext)
         {
             this.dbContext = dbContext;
         }
@@ -25,17 +26,10 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Implementation
             throw new NotImplementedException();
         }
 
-        public virtual async Task<TEntity> CreateAsync(TEntity entity)
-        {
-            dbContext.Set<TEntity>().Add(entity);
-            await dbContext.SaveChangesAsync();
-            return entity;
-        }
-
         public virtual TEntity Create(TEntity entity)
         {
             dbContext.Set<TEntity>().Add(entity);
-            dbContext.SaveChanges();
+            Commit();
             return entity;
         }
 
@@ -44,42 +38,58 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Implementation
             return dbContext.Set<TEntity>().Add(entity);
         }
 
-        public virtual async Task<TEntity> DeleteAsync(int id)
+        public virtual TEntity Delete(int id)
         {
-            var entity = await dbContext.Set<TEntity>().FindAsync(id);
+            var entity = dbContext.Set<TEntity>().Find(id);
             if (entity == null)
                 throw new KeyNotFoundException($"Deletion Id={id} not found in DB");
 
             dbContext.Set<TEntity>().Remove(entity);
-            await dbContext.SaveChangesAsync();
+            Commit();
             return entity;
         }
 
         public virtual TEntity Get(int id)
-        {
+        {            
             return dbContext.Set<TEntity>().Find(id);
         }
-        public virtual async Task<TEntity> GetAsync(int id)
-        {
-            return await dbContext.Set<TEntity>().FindAsync(id);
-        }
 
-        public virtual async Task<List<TEntity>> GetAllAsync(int pageIndex = 1, int pageSize = 100)
+        public virtual List<TEntity> GetAll()
         {
             //TODO: paging
-            return await dbContext.Set<TEntity>().Take(pageSize).ToListAsync();
+            return dbContext.Set<TEntity>().ToList();
         }
 
-        public virtual async Task<TEntity> UpdateAsync(TEntity entity)
+        public virtual TEntity Update(TEntity entity)
         {
             dbContext.Entry(entity).State = EntityState.Modified;
-            await dbContext.SaveChangesAsync();
+            
             return entity;
         }
 
-        public async void Commit()
+        public void Commit()
         {
-            await dbContext.SaveChangesAsync();
+            dbContext.SaveChanges();
+        }
+
+        public virtual List<TDTO> GetAllDTO(int pageIndex, int pageSize, object filter = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual TEntity FromDTO(TDTO dto)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual TDTO ToDTO(TEntity entity)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DbContext GetContext()
+        {
+            return dbContext;
         }
     }
 }

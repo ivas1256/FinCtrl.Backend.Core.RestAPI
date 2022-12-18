@@ -1,56 +1,63 @@
-﻿using FinCtrl.Backend.Core.RestAPI.DAL.Interface;
+﻿using AutoMapper;
+using FinCtrl.Backend.Core.RestAPI.DAL.Implementation;
+using FinCtrl.Backend.Core.RestAPI.DAL.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FinCtrl.Backend.Core.RestAPI.Controllers.BaseControllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public abstract class CRUDController<TEntity, TRepository> : ControllerBase
+    public abstract class CRUDController<TEntity, TDTO, TRep> : ControllerBase        
         where TEntity : class, IEntity
-        where TRepository : IRepository<TEntity>
+        where TDTO : class, IDTO
+        where TRep : class, IRepository<TEntity, TDTO>
     {
-        protected readonly TRepository repository;
-        public CRUDController(TRepository repository)
+        protected readonly TRep _repository;
+        protected readonly IMapper _mapper;
+        public CRUDController(TRep repository, IMapper mapper)
         {
-            this.repository = repository;
+            _repository = repository;
+            _mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<TEntity>>> Get()
-        {
-            return await repository.GetAllAsync();
+        public virtual List<TDTO> GetAll(int pageIndex, int pageSize, string? filter = null)
+        {            
+            return _repository.GetAllDTO(pageIndex, pageSize, filter);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<TEntity>> Get(int id)
+        public ActionResult<TEntity> Get(int id)
         {
-            var entity = await repository.GetAsync(id);
+            var entity = _repository.Get(id);
             if (entity == null)
                 return NotFound();
             return entity;
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> Put(int id, TEntity entity)
+        public virtual ActionResult Put(int id, TDTO dto)
         {
-            if (id != entity.ID)
-                return BadRequest();
+            var entity = _repository.FromDTO(dto);
 
-            await repository.UpdateAsync(entity);
+            _repository.Update(entity);
+            _repository.Commit();
             return NoContent();
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(TEntity entity)
+        public ActionResult Post(TDTO dto)
         {
-            await repository.CreateAsync(entity);
+            var entity = _repository.FromDTO(dto);
+
+            _repository.Create(entity);
             return CreatedAtAction(nameof(Get), new {Id = entity.ID}, entity);
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<TEntity>> Delete(int id)
+        public ActionResult<TEntity> Delete(int id)
         {
-            var entity = await repository.DeleteAsync(id);
+            var entity = _repository.Delete(id);
             return entity;
         }
     }

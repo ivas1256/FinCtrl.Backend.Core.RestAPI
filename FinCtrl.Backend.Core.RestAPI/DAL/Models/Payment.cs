@@ -6,6 +6,8 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Models
 
     public class Payment : IEntity, ITimeLoggingEntity
     {
+        public Payment() { }
+
         public Payment(DateTime date, decimal sum)
         {
             PaymentDate = date;
@@ -23,6 +25,7 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Models
             PaymentType = paymentType;
             PaymentSum = paymentSum;
             PaymentDate = paymentDate;
+            CreatedAt = DateTime.Now;
         }        
 
         public int PaymentId { get; set; }

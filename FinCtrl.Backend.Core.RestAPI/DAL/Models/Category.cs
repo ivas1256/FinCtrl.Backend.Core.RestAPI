@@ -4,6 +4,7 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Models
 {
     public class Category : IEntity, ITimeLoggingEntity
     {
+        public Category() { }
         public Category(int categoryId, string categoryName)
         {
             CategoryId = categoryId;
@@ -15,8 +16,10 @@ namespace FinCtrl.Backend.Core.RestAPI.DAL.Models
         public DateTime CreatedAt { get; private set; }
         public DateTime LastUpdatedAt { get; private set; }
 
+        public Category? ParentCategory { get; set; }
+
+        public List<Category> ChildCategories { get; set; }
+
         public int ID => CategoryId;
-
-
     }
 }

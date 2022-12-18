@@ -40,7 +40,12 @@ namespace FinCtrl.Backend.Core.RestAPI.Migrations
                     b.Property<DateTime>("LastUpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("ParentCategoryCategoryId")
+                        .HasColumnType("int");
+
                     b.HasKey("CategoryId");
+
+                    b.HasIndex("ParentCategoryCategoryId");
 
                     b.ToTable("Categories");
                 });
@@ -112,6 +117,15 @@ namespace FinCtrl.Backend.Core.RestAPI.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("PaymentSources");
+                });
+
+            modelBuilder.Entity("FinCtrl.Backend.Core.RestAPI.DAL.Models.Category", b =>
+                {
+                    b.HasOne("FinCtrl.Backend.Core.RestAPI.DAL.Models.Category", "ParentCategory")
+                        .WithMany()
+                        .HasForeignKey("ParentCategoryCategoryId");
+
+                    b.Navigation("ParentCategory");
                 });
 
             modelBuilder.Entity("FinCtrl.Backend.Core.RestAPI.DAL.Models.Payment", b =>
